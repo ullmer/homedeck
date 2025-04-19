@@ -1,0 +1,15 @@
+{
+    "yaml.completion": true,
+    "yaml.validate": true,
+    "yaml.schemaStore.enable": false,
+    // "yaml.trace.server": "verbose",
+
+    "json.schemas": [],
+    "yaml.schemas": {
+        "src/homedeck/yaml/configuration.schema.yml": [
+            "src/homedeck/yaml/configuration.base.yml",
+            "assets/configuration.yml",
+            "assets/configuration.yml.example",
+        ],
+    }
+}

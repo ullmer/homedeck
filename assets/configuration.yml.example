@@ -1,0 +1,26 @@
+deck:
+  brightness: 90
+
+sleep:
+  dim_brightness: 20
+  dim_timeout: 10
+  sleep_timeout: 300
+
+system_buttons:
+  $page.back:
+    position: 1
+  $page.previous:
+    position: 2
+  $page.next:
+    position: 3
+
+presets: {}
+
+pages:
+  $root:
+    buttons:
+      - text: Hello
+        background_color: b9003e
+
+      - text: World!
+        background_color: b9003e

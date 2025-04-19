@@ -1,0 +1,524 @@
+$schema: 'https://json-schema.org/draft/2020-12/schema'
+title: Configuration Schema
+description: Schema defining layout and behavior of button pages
+
+$defs:
+  TemplateString:
+    description: A string that supports Jinja-style templates (e.g., {{ value }} or {% if %})
+    type: string
+    pattern: '({{.*?}}|{%.*?%})'
+
+  IntPercentage:
+    description: Integer value between 0 and 100 (percentages)
+    type: integer
+    minimum: 0
+    maximum: 100
+
+  IntOrTemplateString:
+    description: Either a raw integer or a string supporting templates
+    oneOf:
+      - type: integer
+      - $ref: '#/$defs/TemplateString'
+
+  StringOrStringArray:
+    description: Accepts either a single string or an array of strings
+    oneOf:
+      - type: string
+      - type: array
+        items:
+          type: string
+
+  StringOrObject:
+    description: Accepts either a simple string or an object with any properties
+    oneOf:
+      - type: string
+      - type: object
+        additionalProperties: true
+
+  LabelStyleAlignEnum:
+    enum:
+      - top
+      - center
+      - bottom
+
+  ActionEnum:
+    description: List of built-in button actions for navigation
+    enum:
+      - $page.go_to
+      - $page.back
+      - $page.previous
+      - $page.next
+
+  EntityId:
+    description: Entity ID pattern, like "light.living_room"
+    type: string
+    pattern: '^[a-z\_]+\.[a-z0-9\_]+$'
+
+  Domain:
+    description: Domain string, like "light" or "switch"
+    type: string
+    pattern: '^[a-z\_]+$'
+
+  Visibility:
+    description: Controls visibility. `hidden`/`False`` = showing an empty button. `gone`/`null` = not showing the button at all.
+    enum:
+      - True
+      - False
+      - null
+      - 'visible'
+      - 'hidden'
+      - 'gone'
+
+  Size:
+    description: 'Size definition: either an integer or a string with two values like "80 70"'
+    oneOf:
+      - type: integer
+        minimum: 0
+        examples:
+          - 80
+      - type: string
+        examples:
+          - 0 80
+          - 80 70
+
+  Offset:
+    description: 'Offset: X Y pair or templated string'
+    oneOf:
+      - $ref: '#/$defs/IntOrTemplateString'
+      - type: string
+        pattern: '^(-?[\d]+) (-?[\d]+)$'
+
+  Page:
+    title: Page layout
+    description: Defines a page with a name and list of buttons
+    type: object
+    additionalProperties: false
+    properties:
+      name:
+        oneOf:
+          - type: string
+          - type: number
+      buttons:
+        type: array
+        items:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/$defs/ButtonWithStates'
+            - $ref: '#/$defs/SpecialButton'
+      button_positions:
+        type: object
+        properties:
+          $page.back:
+            oneOf:
+              - type: 'null'
+              - type: integer
+                minimum: 1
+    required:
+      - buttons
+
+  ButtonAction:
+    title: Button action
+    description: Defines what happens when a button is pressed or held
+    type: object
+    additionalProperties: false
+    properties:
+      action:
+        anyOf:
+          - $ref: '#/$defs/ActionEnum'
+          - $ref: '#/$defs/EntityId'
+      data:
+        $ref: '#/$defs/StringOrObject'
+    required:
+      - action
+
+  Color:
+    description: Represents a color as either hex string or numeric code
+    oneOf:
+      - type: string
+        pattern: '^\/?[a-fA-F0-9]{6}$'
+      - type: integer
+        minimum: 100000
+        maximum: 999999
+    examples:
+      - C0FFEE
+      - 123456
+      - /123ABC
+
+  SpecialButton:
+    description: Special placeholder-style button (e.g., line break)
+    enum:
+      - $break
+
+  ButtonIcon:
+    type: object
+    additionalProperties: false
+    properties:
+      icon:
+        description: The main icon shown on the button
+        oneOf:
+          - type: string
+            pattern: '^(local|mdi|pi):'
+          - type: string
+            format: uri
+            pattern: 'https?:\/\/.*$'
+          - $ref: '#/$defs/TemplateString'
+          - type: 'null'
+      icon_variant:
+        type: string
+        title: Icon variant
+        description: Variant style of some icon packs, like Phosphor.
+        examples:
+          - bold
+          - thin
+      icon_size:
+        $ref: '#/$defs/Size'
+        description: Size of the icon
+      icon_padding:
+        $ref: '#/$defs/IntOrTemplateString'
+        description: Padding around the icon inside the button
+      icon_offset:
+        $ref: '#/$defs/Offset'
+        description: X/Y offset position of the icon
+      icon_border_radius:
+        $ref: '#/$defs/IntOrTemplateString'
+        description: Radius for rounding the icon corners
+      icon_border_width:
+        $ref: '#/$defs/IntOrTemplateString'
+        description: Width of the icon border
+      icon_border_color:
+        description: Color of the icon border
+        anyOf:
+          - $ref: '#/$defs/Color'
+          - $ref: '#/$defs/TemplateString'
+      icon_brightness:
+        description: Brightness adjustment for the icon
+        anyOf:
+          - $ref: '#/$defs/IntPercentage'
+          - $ref: '#/$defs/TemplateString'
+      icon_color:
+        description: Main color of the icon
+        anyOf:
+          - $ref: '#/$defs/Color'
+          - $ref: '#/$defs/TemplateString'
+      icon_background_color:
+        description: Background color behind the icon
+        anyOf:
+          - $ref: '#/$defs/Color'
+          - $ref: '#/$defs/TemplateString'
+      icon_size_mode:
+        description: How the icon fits inside its designated space
+        $ref: '#/$defs/ButtonIconSizeMode'
+      z_index:
+        type: integer
+
+  ButtonTextIcon:
+    type: object
+    additionalProperties: false
+    properties:
+      text:
+        title: Text to display
+        type: string
+      text_color:
+        title: Text's color
+        $ref: '#/$defs/Color'
+      text_align:
+        title: Vertical alignment of the text
+        $ref: '#/$defs/LabelStyleAlignEnum'
+      text_font:
+        title:  Text's font. It's the name of the TTF font (without `.ttf` extension) inside the `assets/fonts` folder.
+        type: string
+      text_size:
+        title: Font size of the text
+        type: integer
+        minimum: 1
+      text_offset:
+        title: Offset position of the text relative to the original position
+        $ref: '#/$defs/Offset'
+      z_index:
+        title: "Similar to \"z-index\" property from CSS. Rendering order: Highest -> lowest."
+        type: integer
+
+  ButtonIconSizeMode:
+    enum:
+      - cover
+      - contain
+      - stretch
+
+  Button:
+    type: object
+    additionalProperties: false
+    properties:
+      presets:
+        $ref: '#/$defs/StringOrStringArray'
+      entity_id:
+        $ref: '#/$defs/EntityId'
+      domain:
+        $ref: '#/$defs/Domain'
+      name:
+        oneOf:
+          - type: string
+          - type: number
+      tap_action:
+        oneOf:
+          - $ref: '#/$defs/ButtonAction'
+          - type: 'null'
+      hold_action:
+        oneOf:
+          - $ref: '#/$defs/ButtonAction'
+          - type: 'null'
+      visibility:
+        oneOf:
+          - $ref: '#/$defs/Visibility'
+          - type: string
+
+      # Icon
+      icon:
+        $ref: '#/$defs/ButtonIcon/properties/icon'
+      icon_variant:
+        $ref: '#/$defs/ButtonIcon/properties/icon_variant'
+      icon_size:
+        $ref: '#/$defs/ButtonIcon/properties/icon_size'
+      icon_padding:
+        $ref: '#/$defs/ButtonIcon/properties/icon_padding'
+      icon_offset:
+        $ref: '#/$defs/ButtonIcon/properties/icon_offset'
+      icon_border_radius:
+        $ref: '#/$defs/ButtonIcon/properties/icon_border_radius'
+      icon_border_width:
+        $ref: '#/$defs/ButtonIcon/properties/icon_border_width'
+      icon_border_color:
+        $ref: '#/$defs/ButtonIcon/properties/icon_border_color'
+      icon_brightness:
+        $ref: '#/$defs/ButtonIcon/properties/icon_brightness'
+      icon_color:
+        $ref: '#/$defs/ButtonIcon/properties/icon_color'
+      icon_background_color:
+        $ref: '#/$defs/ButtonIcon/properties/icon_background_color'
+      icon_size_mode:
+        $ref: '#/$defs/ButtonIcon/properties/icon_size_mode'
+
+      # Text
+      text:
+        $ref: '#/$defs/ButtonTextIcon/properties/text'
+      text_color:
+        $ref: '#/$defs/ButtonTextIcon/properties/text_color'
+      text_align:
+        $ref: '#/$defs/ButtonTextIcon/properties/text_align'
+      text_font:
+        $ref: '#/$defs/ButtonTextIcon/properties/text_font'
+      text_size:
+        $ref: '#/$defs/ButtonTextIcon/properties/text_size'
+      text_offset:
+        $ref: '#/$defs/ButtonTextIcon/properties/text_offset'
+
+      additional_icons:
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/$defs/ButtonIcon'
+            - $ref: '#/$defs/ButtonTextIcon'
+
+  ButtonWithStates:
+    description: A button that supports multiple visual states based on entity state (e.g., toggle appearance when a light is on/off)
+    type: object
+    additionalProperties: false
+    properties:
+      presets:
+        $ref: '#/$defs/StringOrStringArray'
+        description: List of preset style names to inherit from
+      entity_id:
+        $ref: '#/$defs/EntityId'
+        description: Entity ID this button controls or reflects (e.g., light.kitchen)
+      domain:
+        $ref: '#/$defs/Domain'
+        description: Home Assistant domain for the entity (e.g., light, switch)
+      name:
+        oneOf:
+          - type: string
+          - type: number
+        description: Optional label or identifier for the button
+      tap_action:
+        oneOf:
+          - $ref: '#/$defs/ButtonAction'
+          - type: 'null'
+        description: Defines what happens when the button is tapped
+      hold_action:
+        oneOf:
+          - $ref: '#/$defs/ButtonAction'
+          - type: 'null'
+        description: Defines what happens when the button is long-pressed
+      visibility:
+        oneOf:
+          - $ref: '#/$defs/Visibility'
+          - type: string
+        description: Controls whether the button is shown, hidden, or gone
+
+      icon:
+        $ref: '#/$defs/ButtonIcon/properties/icon'
+      icon_variant:
+        $ref: '#/$defs/ButtonIcon/properties/icon_variant'
+      icon_size:
+        $ref: '#/$defs/ButtonIcon/properties/icon_size'
+      icon_padding:
+        $ref: '#/$defs/ButtonIcon/properties/icon_padding'
+      icon_offset:
+        $ref: '#/$defs/ButtonIcon/properties/icon_offset'
+      icon_border_radius:
+        $ref: '#/$defs/ButtonIcon/properties/icon_border_radius'
+      icon_border_width:
+        $ref: '#/$defs/ButtonIcon/properties/icon_border_width'
+      icon_border_color:
+        $ref: '#/$defs/ButtonIcon/properties/icon_border_color'
+      icon_brightness:
+        $ref: '#/$defs/ButtonIcon/properties/icon_brightness'
+      icon_color:
+        $ref: '#/$defs/ButtonIcon/properties/icon_color'
+      icon_background_color:
+        $ref: '#/$defs/ButtonIcon/properties/icon_background_color'
+      icon_size_mode:
+        $ref: '#/$defs/ButtonIcon/properties/icon_size_mode'
+
+      text:
+        $ref: '#/$defs/ButtonTextIcon/properties/text'
+      text_color:
+        $ref: '#/$defs/ButtonTextIcon/properties/text_color'
+      text_align:
+        $ref: '#/$defs/ButtonTextIcon/properties/text_align'
+      text_font:
+        $ref: '#/$defs/ButtonTextIcon/properties/text_font'
+      text_size:
+        $ref: '#/$defs/ButtonTextIcon/properties/text_size'
+      text_offset:
+        $ref: '#/$defs/ButtonTextIcon/properties/text_offset'
+
+      additional_icons:
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/$defs/ButtonIcon'
+            - $ref: '#/$defs/ButtonTextIcon'
+
+      states:
+        type: object
+        title: Overrides for the button appearance per entity state
+        additionalProperties:
+          $ref: '#/$defs/Button'
+
+type: object
+additionalProperties: false
+properties:
+  brightness:
+    type: integer
+    minimum: 1
+    maximum: 100
+    title: Initial button brightness level (1-100)
+    examples:
+      - 90
+
+  sleep:
+    title: Sleep mode configuration when inactive
+    examples:
+      - dim_brightness: 20
+        dim_timeout: 30
+        sleep_timeout: 300
+    oneOf:
+      - type: 'null'
+      - type: object
+        additionalProperties: false
+        properties:
+          dim_brightness:
+            $ref: '#/$defs/IntPercentage'
+            title: Brightness level when the device is idle before sleep
+          dim_timeout:
+            type: integer
+            minimum: 1
+            title: Number of seconds before dimming the display
+          sleep_timeout:
+            type: integer
+            minimum: 1
+            title: Number of seconds before the display turns off
+        required:
+          - dim_brightness
+          - dim_timeout
+          - sleep_timeout
+
+  label_style:
+    type: object
+    additionalProperties: false
+    title: Global text styling for all button labels and titles
+    properties:
+      align:
+        $ref: '#/$defs/LabelStyleAlignEnum'
+        description: Aligns the label vertically on buttons
+      color:
+        $ref: '#/$defs/Color'
+        title: Default label color
+      font:
+        type: integer
+        title: Font index or ID
+      show_title:
+        type: boolean
+        title: Toggle the display of button labels
+      size:
+        type: integer
+        title: Font size for button labels
+      weight:
+        type: integer
+        title: Font weight (unused?)
+    required:
+      - align
+      - color
+      - font
+      - show_title
+      - size
+      - weight
+
+  presets:
+    type: object
+    additionalProperties: false
+    title: Preset button templates to reduce duplication
+    properties:
+      $default:
+        $ref: '#/$defs/ButtonWithStates'
+      $page:
+        $ref: '#/$defs/ButtonWithStates'
+    patternProperties:
+      '^[$a-z0-9\_\-\.]+$':
+        $ref: '#/$defs/ButtonWithStates'
+
+  system_buttons:
+    description: Defines special buttons like back/previous/next that navigate between pages
+    type: object
+    propertyNames:
+      $ref: '#/$defs/ActionEnum'
+    additionalProperties:
+      type: object
+      additionalProperties: false
+      properties:
+        position:
+          type: integer
+          minimum: 0
+          description: Slot number where the system button appears on the screen
+        button:
+          $ref: '#/$defs/Button'
+          description: Button configuration for the system-level button
+    examples:
+      - '\$page.back':
+          position: 1
+        '\$page.previous':
+          position: 2
+        '\$page.next':
+          position: 3
+
+  pages:
+    type: object
+    additionalProperties: false
+    description: Defines each page layout
+    properties:
+      $root:
+        $ref: '#/$defs/Page'
+    patternProperties:
+      '^[$a-z0-9\_\-\.]+$':
+        $ref: '#/$defs/Page'
+    required:
+      - $root
