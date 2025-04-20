@@ -17,4 +17,4 @@ source /app/homedeck-venv/bin/activate && cd /app/homedeck && pip install -e .
 # Run HomeDeck at startup
 ( crontab -l 2>/dev/null; echo "@reboot /bin/bash -c 'source /app/homedeck-venv/bin/activate && python /app/homedeck/server.py'" ) | crontab -
 
-print('Installed HomeDeck successfully!')
+echo "Installed HomeDeck successfully!"

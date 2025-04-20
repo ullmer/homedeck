@@ -1,5 +1,4 @@
-deck:
-  brightness: 90
+brightness: 90
 
 sleep:
   dim_brightness: 20
@@ -20,7 +19,7 @@ pages:
   $root:
     buttons:
       - text: Hello
-        background_color: b9003e
+        icon_background_color: b9003e
 
       - text: World!
-        background_color: b9003e
+        icon_background_color: b9003e
