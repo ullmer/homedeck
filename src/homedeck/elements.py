@@ -234,7 +234,9 @@ class PageElement:
             icon_path = os.path.join('.cache', 'icons', '_generated', icon_name)
             if os.path.exists(icon_path):
                 # Copy icon
-                shutil.copyfile(icon_path, os.path.join('.build', 'page', 'icons', icon_name))
+                icons_build_path = os.path.join('.build', 'page', 'icons')
+                os.makedirs(icons_build_path, exist_ok=True)
+                shutil.copyfile(icon_path, os.path.join(icons_build_path, icon_name))
                 output[index]['icon'] = icon_name
 
         print('page', output)
