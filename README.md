@@ -1,6 +1,9 @@
 # HomeDeck
 
-> A lightweight Python library to control Home Assistant using Stream Deck-like devices. It's designed to run on a less powerful Linux SBC (like Raspberry Pi Zero 2W, OrangePi Zero 2W...) with a deck connected so you can put it anywhere in the house.
+> [!WARNING]
+> The documents are not finished yet, but the script is usable if you know how to run it. I'm writing the installation guide.
+
+A lightweight Python library to control Home Assistant using Stream Deck-like devices. It's designed to run on a less powerful Linux SBC (like Raspberry Pi Zero 2W, OrangePi Zero 2W...) with a deck connected so you can put it anywhere in the house.
 
 ### Features
 - ✅ Easy to use, syntax is similar to Home Assistant and CSS
