@@ -43,9 +43,7 @@ class Icon:
 
             icon = None
             icon_source = layer['icon_source']
-            if icon_source == IconSource.NONE:
-                continue
-            elif icon_source == IconSource.MATERIAL_DESIGN:
+            if icon_source == IconSource.MATERIAL_DESIGN:
                 icon = MaterialDesignIconLayer(layer)
             elif icon_source == IconSource.PHOSPHOR:
                 icon = PhosphorIconLayer(layer)
@@ -53,6 +51,8 @@ class Icon:
                 icon = TextIconLayer(layer)
             elif icon_source == IconSource.URL:
                 icon = UrlIconLayer(layer)
+            elif icon_source == IconSource.BLANK:
+                icon = LocalIconLayer(layer, file_path=None)
             elif icon_source == IconSource.LOCAL:
                 file_path = layer['icon_name']
                 layer['icon_name'] = os.path.basename(file_path)
@@ -82,7 +82,7 @@ class Icon:
             optimize_image(self._generated_path, optimize_level=5)
 
     def _normalize_icon(self, icon: dict):
-        icon['icon_source'] = IconSource.NONE
+        icon['icon_source'] = IconSource.BLANK
         if icon.get('icon'):
             # Set `icon_name` from `icon`
             try:
@@ -90,9 +90,24 @@ class Icon:
                 icon['icon_name'] = name
                 icon['icon_source'] = IconSource(source)
             except Exception:
-                icon['icon_source'] = IconSource.NONE
-                return
+                icon['icon_source'] = IconSource.BLANK
+        elif icon.get('text'):
+            icon['icon_source'] = IconSource.TEXT
+            icon['icon_name'] = ''
 
+            icon.setdefault('text_color', 'FFFFFF')
+            icon.setdefault('text_align', 'center')
+            icon.setdefault('text_font', 'Roboto-SemiBold')
+            icon.setdefault('text_size', 20)
+            icon.setdefault('text_offset', (0, 0))
+
+            icon['text_offset'] = normalize_tuple(icon['text_offset'])
+            icon['text_color'] = normalize_hex_color(icon['text_color'])
+
+        icon.setdefault('icon_source', IconSource.BLANK)
+
+        # Set default properties
+        if icon['icon_source'] != IconSource.TEXT:
             icon.setdefault('icon_variant', None)
             icon.setdefault('icon_padding', 0)
             icon.setdefault('icon_color', 'FFFFFF')
@@ -115,22 +130,6 @@ class Icon:
             icon['icon_background_color'] = normalize_hex_color(icon['icon_background_color'])
             icon['icon_border_color'] = normalize_hex_color(icon['icon_border_color'] or icon['icon_color'] or icon['icon_background_color'] or 'FFFFFF')
 
-            icon.setdefault('brightness', 100)
-        elif icon.get('text'):
-            icon['icon_source'] = IconSource.TEXT
-            icon['icon_name'] = ''
-
-            icon.setdefault('text_color', 'FFFFFF')
-            icon.setdefault('text_align', 'center')
-            icon.setdefault('text_font', None)
-            icon.setdefault('text_size', 0)
-            icon.setdefault('text_offset', (0, 0))
-
-            icon['text_offset'] = normalize_tuple(icon['text_offset'])
-            icon['text_color'] = normalize_hex_color(icon['text_color'])
-
-        icon.setdefault('icon_source', None)
-
     def generated_filename(self):
         return f'test-{hash(tuple(self._icon_layers))}.png'
 
@@ -143,7 +142,7 @@ class IconLayer(ABC):
 
         # Set default name
         if not hasattr(self, '_name'):
-            self._name = icon['icon_name']
+            self._name = icon.get('icon_name', '')
 
         self._original_file_path = file_path
         if file_path:
@@ -153,6 +152,10 @@ class IconLayer(ABC):
         self._generated_path = os.path.join(CACHE_GENERATED_DIR, self.generated_filename())
 
     def is_available(self) -> bool:
+        # Blank icon
+        if self._original_file_path is None:
+            return True
+
         return os.path.exists(self._original_file_path)
 
     def __hash__(self):
@@ -220,20 +223,23 @@ class LocalIconLayer(IconLayer):
         button_width = icon_styles['max_width']
         button_height = icon_styles['max_height']
 
-        # SVG to PNG
-        is_svg = self._original_file_path.endswith('svg')
-        if is_svg:
-            tmp_file = os.path.join(CACHE_ICONS_DIR, f'.tmp-{self.generated_filename()}')
-            cairosvg.svg2png(url=self._original_file_path, write_to=tmp_file, output_width=icon_width, output_height=icon_height)
-            img = Image.open(tmp_file)
-            os.remove(tmp_file)
-        else:
-            img = Image.open(self.original_file_path).convert('RGBA')
-            img = IconEditor.resize(img, icon_styles['icon_size_mode'], icon_styles['icon_size'])
+        if self._original_file_path:
+            # SVG to PNG
+            is_svg = self._original_file_path.endswith('svg')
+            if is_svg:
+                tmp_file = os.path.join(CACHE_ICONS_DIR, f'.tmp-{self.generated_filename()}')
+                cairosvg.svg2png(url=self._original_file_path, write_to=tmp_file, output_width=icon_width, output_height=icon_height)
+                img = Image.open(tmp_file)
+                os.remove(tmp_file)
 
-        # Apply color overlay
-        if is_svg:
-            img = IconEditor.apply_color(img, icon_styles['icon_color'])
+                # Apply color overlay
+                img = IconEditor.apply_color(img, icon_styles['icon_color'])
+            else:
+                img = Image.open(self.original_file_path).convert('RGBA')
+                img = IconEditor.resize(img, icon_styles['icon_size_mode'], icon_styles['icon_size'])
+        else:
+            # Blank icon
+            img = Image.new('RGBA', (icon_width, icon_height), 0)
 
         # Apply icon's padding
         img = IconEditor.apply_padding(img, icon_styles['icon_padding'])
@@ -252,9 +258,6 @@ class LocalIconLayer(IconLayer):
 
         # Crop
         img = IconEditor.crop(img, width=button_width, height=button_height)
-
-        # Brightness
-        img = IconEditor.adjust_brightness(img, icon_styles['brightness'])
 
         # Save image
         img.save(self._generated_path, 'PNG')
@@ -350,6 +353,10 @@ class IconProvider:
         button_fields = [field.name for field in fields(button_config)]
         for key in button_fields:
             value = getattr(button_config, key)
+            # Don't set None values so we could set the default values later
+            if value is None:
+                continue
+
             if key in ICON_FIELDS:
                 main_icon[key] = value
             elif key in TEXT_ICON_FIELDS:

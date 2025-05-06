@@ -79,13 +79,13 @@ presets:
 # Later
 pages:
   $root:
-    button:
+    buttons:
       # This button will have a red background and green text
       - name: Red button
         presets:
           - red_button
           - green_text
-        icon: mdi:couch
+        icon: mdi:sofa
         text: Couch
 ```
 

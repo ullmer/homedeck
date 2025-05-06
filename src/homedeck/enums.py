@@ -14,7 +14,7 @@ class InteractionType(Enum):
 
 
 class IconSource(Enum):
-    NONE = 'none'
+    BLANK = 'blank'
     LOCAL = 'local'
     URL = 'url'
     TEXT = 'text'
