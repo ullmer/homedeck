@@ -11,9 +11,15 @@ import httpx
 from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 
 from .dataclasses import ICON_FIELDS, TEXT_ICON_FIELDS, PageButtonConfig
-from .enums import IconSource, PhosphorIconVariant
+from .enums import IconSource, MaterialYouScheme, PhosphorIconVariant
 from .event_bus import EventName, event_bus
-from .utils import hex_to_rgb, normalize_hex_color, normalize_tuple, optimize_image
+from .utils import (
+    generate_material_you_palette,
+    hex_to_rgb,
+    normalize_hex_color,
+    normalize_tuple,
+    optimize_image,
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,7 +32,7 @@ if os.path.exists(CACHE_GENERATED_DIR):
 
 
 class Icon:
-    def __init__(self, max_width: int, max_height: int, layers: List[Dict]):
+    def __init__(self, max_width: int, max_height: int, layers: List[Dict], material_you_palette=None):
         icon_img = Image.new('RGBA', (max_width, max_height), (0, 0, 0, 0))
 
         # Sort layers by "z_index"
@@ -39,7 +45,8 @@ class Icon:
 
             layer['max_width'] = max_width
             layer['max_height'] = max_height
-            self._normalize_icon(layer)
+
+            self._normalize_icon(layer, material_you_palette=material_you_palette)
 
             icon = None
             icon_source = layer['icon_source']
@@ -81,7 +88,7 @@ class Icon:
             # Optimize image
             optimize_image(self._generated_path, optimize_level=5)
 
-    def _normalize_icon(self, icon: dict):
+    def _normalize_icon(self, icon: dict, material_you_palette=None):
         icon['icon_source'] = IconSource.BLANK
         if icon.get('icon'):
             # Set `icon_name` from `icon`
@@ -95,7 +102,7 @@ class Icon:
             icon['icon_source'] = IconSource.TEXT
             icon['icon_name'] = ''
 
-            icon.setdefault('text_color', 'FFFFFF')
+            icon.setdefault('text_color', material_you_palette[MaterialYouScheme.PRIMARY] if material_you_palette else 'FFFFFF')
             icon.setdefault('text_align', 'center')
             icon.setdefault('text_font', 'Roboto-SemiBold')
             icon.setdefault('text_size', 20)
@@ -110,13 +117,28 @@ class Icon:
         if icon['icon_source'] != IconSource.TEXT:
             icon.setdefault('icon_variant', None)
             icon.setdefault('icon_padding', 0)
-            icon.setdefault('icon_color', 'FFFFFF')
-            icon.setdefault('icon_background_color', None)
             icon.setdefault('icon_offset', (0, 0))
             icon.setdefault('icon_border_radius', 0)
             icon.setdefault('icon_border_width', 0)
-            icon.setdefault('icon_border_color', None)
             icon.setdefault('icon_brightness', None)
+
+            icon.setdefault('icon_color', 'FFFFFF')
+            icon.setdefault('icon_background_color', None)
+            icon.setdefault('icon_border_color', None)
+
+            if material_you_palette:
+                if icon['icon_color'] in material_you_palette:
+                    icon['icon_color'] = material_you_palette[icon['icon_color']]
+
+                if icon['icon_background_color'] in material_you_palette:
+                    icon['icon_background_color'] = material_you_palette[icon['icon_background_color']]
+
+                if icon['icon_border_color'] in material_you_palette:
+                    icon['icon_border_color'] = material_you_palette[icon['icon_border_color']]
+
+            icon['icon_color'] = normalize_hex_color(icon['icon_color'])
+            icon['icon_background_color'] = normalize_hex_color(icon['icon_background_color'])
+            icon['icon_border_color'] = normalize_hex_color(icon['icon_border_color'] or icon['icon_color'] or icon['icon_background_color'] or 'FFFFFF')
 
             icon.setdefault('icon_size', (icon['max_width'], icon['max_height']))
             icon['icon_size'] = normalize_tuple(icon['icon_size'])
@@ -126,9 +148,6 @@ class Icon:
                 icon['icon_size'] = (icon['icon_size'][0], icon['max_height'])
 
             icon['icon_offset'] = normalize_tuple(icon['icon_offset'])
-            icon['icon_color'] = normalize_hex_color(icon['icon_color'])
-            icon['icon_background_color'] = normalize_hex_color(icon['icon_background_color'])
-            icon['icon_border_color'] = normalize_hex_color(icon['icon_border_color'] or icon['icon_color'] or icon['icon_background_color'] or 'FFFFFF')
 
     def generated_filename(self):
         return f'test-{hash(tuple(self._icon_layers))}.png'
@@ -373,7 +392,13 @@ class IconProvider:
             layers += additional_icons
 
         if layers:
-            return Icon(button_config.max_width, button_config.max_height, layers)
+            # Material You
+            material_you_color = normalize_hex_color(button_config.material_you_color)
+            material_you_palette = None
+            if material_you_color:
+                material_you_palette = generate_material_you_palette(material_you_color)
+
+            return Icon(button_config.max_width, button_config.max_height, layers, material_you_palette=material_you_palette)
 
         return None
 

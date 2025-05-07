@@ -77,6 +77,8 @@ class PageButtonConfig:
     states: Optional[Dict[str, Dict]] = field(default_factory=lambda: {})
     is_dynamic: Optional[bool] = False
 
+    material_you_color: Optional[str] = field(default=None, metadata={'icon': True, 'text_icon': True})
+
     # Icon fields
     icon_variant: Optional[str] = field(default=None, metadata={'icon': True})
     icon: Optional[str] = field(default=None, metadata={'icon': True})

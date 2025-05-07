@@ -59,6 +59,38 @@ $defs:
     type: string
     pattern: '^[a-z\_]+$'
 
+  MaterialYouSchemeEnum:
+    enum:
+      - primary
+      - on-primary
+      - primary-container
+      - on-primary-container
+      - secondary
+      - on-secondary
+      - secondary-container
+      - on-secondary-container
+      - tertiary
+      - on-tertiary
+      - tertiary-container
+      - on-tertiary-container
+      - error
+      - on-error
+      - error-container
+      - on-error-container
+      - background
+      - on-background
+      - surface
+      - on-surface
+      - surface-variant
+      - on-surface-variant
+      - outline
+      - outline-variant
+      - shadow
+      - scrim
+      - inverse-surface
+      - inverse-on-surface
+      - inverse-primary
+
   Visibility:
     description: Controls visibility. `hidden`/`False`` = showing an empty button. `gone`/`null` = not showing the button at all.
     enum:
@@ -199,11 +231,13 @@ $defs:
         description: Main color of the icon
         anyOf:
           - $ref: '#/$defs/Color'
+          - $ref: '#/$defs/MaterialYouSchemeEnum'
           - $ref: '#/$defs/TemplateString'
       icon_background_color:
         description: Background color behind the icon
         anyOf:
           - $ref: '#/$defs/Color'
+          - $ref: '#/$defs/MaterialYouSchemeEnum'
           - $ref: '#/$defs/TemplateString'
       icon_size_mode:
         description: How the icon fits inside its designated space
@@ -220,7 +254,10 @@ $defs:
         type: string
       text_color:
         title: Text's color
-        $ref: '#/$defs/Color'
+        anyOf:
+          - $ref: '#/$defs/Color'
+          - $ref: '#/$defs/MaterialYouSchemeEnum'
+          - $ref: '#/$defs/TemplateString'
       text_align:
         title: Vertical alignment of the text
         $ref: '#/$defs/LabelStyleAlignEnum'
@@ -270,6 +307,12 @@ $defs:
         oneOf:
           - $ref: '#/$defs/Visibility'
           - type: string
+
+      material_you_color:
+        description: Base color for Material You
+        anyOf:
+          - $ref: '#/$defs/Color'
+          - $ref: '#/$defs/TemplateString'
 
       # Icon
       icon:
@@ -352,6 +395,12 @@ $defs:
           - $ref: '#/$defs/Visibility'
           - type: string
         description: Controls whether the button is shown, hidden, or gone
+
+      material_you_color:
+        description: Base color for Material You
+        anyOf:
+          - $ref: '#/$defs/Color'
+          - $ref: '#/$defs/TemplateString'
 
       icon:
         $ref: '#/$defs/ButtonIcon/properties/icon'

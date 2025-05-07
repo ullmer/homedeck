@@ -1,8 +1,13 @@
 import os
+import re
 import shutil
 import subprocess
 import zipfile
 from typing import Union
+
+from materialyoucolor.dynamiccolor.material_dynamic_colors import MaterialDynamicColors
+from materialyoucolor.hct import Hct
+from materialyoucolor.scheme.scheme_fidelity import SchemeFidelity
 
 from .enums import ButtonElementAction
 
@@ -30,16 +35,25 @@ def normalize_hex_color(color: Union[str, int]):
     if not color:
         return None
 
-    color = str(color)
+    try:
+        if isinstance(color, list):
+            r, g, b, _ = color
+            return '{:02X}{:02X}{:02X}'.format(r, g, b)
 
-    # Remove '/' prefix
-    if color.startswith('/'):
-        color = color[1:]
+        color = str(color)
 
-    # Padding
-    color = color.ljust(6, '0')
+        # Remove '/' prefix
+        if color.startswith('/'):
+            color = color[1:]
 
-    return color.upper()
+        # Padding
+        color = color.ljust(6, '0')
+        color = color.upper()
+
+        assert re.match(r'[0-9A-F]{6}', color)
+        return color
+    except Exception:
+        return None
 
 
 def hex_to_rgb(hex_color: str, alpha=None):
@@ -143,3 +157,21 @@ def normalize_button_positions(positions: dict):
         del positions[key]
 
     return positions
+
+
+def camel_to_kebab(name):
+    return re.sub(r'(?<!^)(?=[A-Z])', '-', name).replace('_', '-').lower()
+
+
+def generate_material_you_palette(color: str):
+    int_color = int(f'0xff{color}', 16) or 1
+    scheme = SchemeFidelity(Hct.from_int(int_color), is_dark=True, contrast_level=0)
+
+    palette = {}
+    for color_name in vars(MaterialDynamicColors).keys():
+        __ = getattr(MaterialDynamicColors, color_name)
+        if hasattr(__, 'get_hct'):
+            color_name = camel_to_kebab(color_name)
+            palette[color_name] = normalize_hex_color(__.get_hct(scheme).to_rgba())
+
+    return palette

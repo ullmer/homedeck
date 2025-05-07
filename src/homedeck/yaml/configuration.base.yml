@@ -51,14 +51,12 @@ presets:
     text_font: Roboto-SemiBold
 
   $page:
-    icon_color: FFFFFF
     icon_padding: 10
     icon_border_radius: 10
     icon_border_width: 4
     icon_variant: fill
     icon_offset: 0
     icon_size: 100
-    icon_border_color: FFFFFF
 
   $page.go_to:
     presets: $page
