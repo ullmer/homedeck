@@ -254,6 +254,14 @@ $defs:
       icon_size_mode:
         description: How the icon fits inside its designated space
         $ref: '#/$defs/ButtonIconSizeMode'
+      material_you_color:
+        description: Base color for Material You
+        anyOf:
+          - $ref: '#/$defs/Color'
+          - $ref: '#/$defs/TemplateString'
+      material_you_scheme:
+        description: Color scheme of Material You
+        $ref: '#/$defs/MaterialYouSchemeEnum'
       z_index:
         type: integer
 
@@ -283,6 +291,14 @@ $defs:
       text_offset:
         title: Offset position of the text relative to the original position
         $ref: '#/$defs/Offset'
+      material_you_color:
+        description: Base color for Material You
+        anyOf:
+          - $ref: '#/$defs/Color'
+          - $ref: '#/$defs/TemplateString'
+      material_you_scheme:
+        description: Color scheme of Material You
+        $ref: '#/$defs/MaterialYouSchemeEnum'
       z_index:
         title: "Similar to \"z-index\" property from CSS. Rendering order: Highest -> lowest."
         type: integer
@@ -321,14 +337,10 @@ $defs:
           - type: string
 
       material_you_color:
-        description: Base color for Material You
-        anyOf:
-          - $ref: '#/$defs/Color'
-          - $ref: '#/$defs/TemplateString'
+        $ref: '#/$defs/ButtonIcon/properties/material_you_color'
 
       material_you_scheme:
-        description: Color scheme of Material You
-        $ref: '#/$defs/MaterialYouSchemeEnum'
+        $ref: '#/$defs/ButtonIcon/properties/material_you_scheme'
 
       # Icon
       icon:

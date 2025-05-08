@@ -32,7 +32,7 @@ if os.path.exists(CACHE_GENERATED_DIR):
 
 
 class Icon:
-    def __init__(self, max_width: int, max_height: int, layers: List[Dict], material_you_palette=None):
+    def __init__(self, max_width: int, max_height: int, layers: List[Dict]):
         icon_img = Image.new('RGBA', (max_width, max_height), (0, 0, 0, 0))
 
         # Sort layers by "z_index"
@@ -45,6 +45,12 @@ class Icon:
 
             layer['max_width'] = max_width
             layer['max_height'] = max_height
+
+            # Material You
+            material_you_palette = None
+            material_you_color = normalize_hex_color(layer.get('material_you_color'))
+            if material_you_color:
+                material_you_palette = generate_material_you_palette(layer.get('material_you_scheme'), material_you_color)
 
             self._normalize_icon(layer, material_you_palette=material_you_palette)
 
@@ -102,11 +108,17 @@ class Icon:
             icon['icon_source'] = IconSource.TEXT
             icon['icon_name'] = ''
 
-            icon.setdefault('text_color', material_you_palette[MaterialYouScheme.PRIMARY] if material_you_palette else 'FFFFFF')
             icon.setdefault('text_align', 'center')
             icon.setdefault('text_font', 'Roboto-SemiBold')
             icon.setdefault('text_size', 20)
             icon.setdefault('text_offset', (0, 0))
+
+            if material_you_palette:
+                icon.setdefault('text_color', 'on-primary-container')
+                if icon['text_color'] in material_you_palette:
+                    icon['text_color'] = material_you_palette[icon['text_color']]
+            else:
+                icon.setdefault('text_color', 'FFFFFF')
 
             icon['text_offset'] = normalize_tuple(icon['text_offset'])
             icon['text_color'] = normalize_hex_color(icon['text_color'])
@@ -392,13 +404,7 @@ class IconProvider:
             layers += additional_icons
 
         if layers:
-            # Material You
-            material_you_color = normalize_hex_color(button_config.material_you_color)
-            material_you_palette = None
-            if material_you_color:
-                material_you_palette = generate_material_you_palette(button_config.material_you_scheme, material_you_color)
-
-            return Icon(button_config.max_width, button_config.max_height, layers, material_you_palette=material_you_palette)
+            return Icon(button_config.max_width, button_config.max_height, layers)
 
         return None
 
