@@ -61,6 +61,18 @@ $defs:
 
   MaterialYouSchemeEnum:
     enum:
+      - content
+      - expressive
+      - fidelity
+      - fruit-salad
+      - monochrome
+      - rainbow
+      - spritz
+      - tonal-spot
+      - vibrant
+
+  MaterialYouRoleEnum:
+    enum:
       - primary
       - on-primary
       - primary-container
@@ -231,13 +243,13 @@ $defs:
         description: Main color of the icon
         anyOf:
           - $ref: '#/$defs/Color'
-          - $ref: '#/$defs/MaterialYouSchemeEnum'
+          - $ref: '#/$defs/MaterialYouRoleEnum'
           - $ref: '#/$defs/TemplateString'
       icon_background_color:
         description: Background color behind the icon
         anyOf:
           - $ref: '#/$defs/Color'
-          - $ref: '#/$defs/MaterialYouSchemeEnum'
+          - $ref: '#/$defs/MaterialYouRoleEnum'
           - $ref: '#/$defs/TemplateString'
       icon_size_mode:
         description: How the icon fits inside its designated space
@@ -256,7 +268,7 @@ $defs:
         title: Text's color
         anyOf:
           - $ref: '#/$defs/Color'
-          - $ref: '#/$defs/MaterialYouSchemeEnum'
+          - $ref: '#/$defs/MaterialYouRoleEnum'
           - $ref: '#/$defs/TemplateString'
       text_align:
         title: Vertical alignment of the text
@@ -313,6 +325,10 @@ $defs:
         anyOf:
           - $ref: '#/$defs/Color'
           - $ref: '#/$defs/TemplateString'
+
+      material_you_scheme:
+        description: Color scheme of Material You
+        $ref: '#/$defs/MaterialYouSchemeEnum'
 
       # Icon
       icon:
@@ -401,6 +417,9 @@ $defs:
         anyOf:
           - $ref: '#/$defs/Color'
           - $ref: '#/$defs/TemplateString'
+      material_you_scheme:
+        description: Color scheme of Material You
+        $ref: '#/$defs/MaterialYouSchemeEnum'
 
       icon:
         $ref: '#/$defs/ButtonIcon/properties/icon'

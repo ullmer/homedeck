@@ -7,7 +7,15 @@ from typing import Union
 
 from materialyoucolor.dynamiccolor.material_dynamic_colors import MaterialDynamicColors
 from materialyoucolor.hct import Hct
+from materialyoucolor.scheme.scheme_content import SchemeContent
+from materialyoucolor.scheme.scheme_expressive import SchemeExpressive
 from materialyoucolor.scheme.scheme_fidelity import SchemeFidelity
+from materialyoucolor.scheme.scheme_fruit_salad import SchemeFruitSalad
+from materialyoucolor.scheme.scheme_monochrome import SchemeMonochrome
+from materialyoucolor.scheme.scheme_neutral import SchemeNeutral
+from materialyoucolor.scheme.scheme_rainbow import SchemeRainbow
+from materialyoucolor.scheme.scheme_tonal_spot import SchemeTonalSpot
+from materialyoucolor.scheme.scheme_vibrant import SchemeVibrant
 
 from .enums import ButtonElementAction
 
@@ -163,9 +171,24 @@ def camel_to_kebab(name):
     return re.sub(r'(?<!^)(?=[A-Z])', '-', name).replace('_', '-').lower()
 
 
-def generate_material_you_palette(color: str):
+MATERIAL_YOU_CLASSES = {
+    'content': SchemeContent,
+    'expressive': SchemeExpressive,
+    'fidelity': SchemeFidelity,
+    'fruit-salad': SchemeFruitSalad,
+    'monochrome': SchemeMonochrome,
+    'rainbow': SchemeRainbow,
+    'neutral': SchemeNeutral,
+    'tonal-spot': SchemeTonalSpot,
+    'vibrant': SchemeVibrant,
+}
+
+
+def generate_material_you_palette(scheme: str, color: str):
     int_color = int(f'0xff{color}', 16) or 1
-    scheme = SchemeFidelity(Hct.from_int(int_color), is_dark=True, contrast_level=0)
+
+    scheme_class = MATERIAL_YOU_CLASSES.get(scheme, SchemeVibrant)
+    scheme = scheme_class(Hct.from_int(int_color), is_dark=True, contrast_level=0)
 
     palette = {}
     for color_name in vars(MaterialDynamicColors).keys():

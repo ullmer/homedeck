@@ -396,7 +396,7 @@ class IconProvider:
             material_you_color = normalize_hex_color(button_config.material_you_color)
             material_you_palette = None
             if material_you_color:
-                material_you_palette = generate_material_you_palette(material_you_color)
+                material_you_palette = generate_material_you_palette(button_config.material_you_scheme, material_you_color)
 
             return Icon(button_config.max_width, button_config.max_height, layers, material_you_palette=material_you_palette)
 

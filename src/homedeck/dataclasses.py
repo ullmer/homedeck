@@ -78,6 +78,7 @@ class PageButtonConfig:
     is_dynamic: Optional[bool] = False
 
     material_you_color: Optional[str] = field(default=None, metadata={'icon': True, 'text_icon': True})
+    material_you_scheme: Optional[str] = field(default=None, metadata={'icon': True, 'text_icon': True})
 
     # Icon fields
     icon_variant: Optional[str] = field(default=None, metadata={'icon': True})
