@@ -28,12 +28,14 @@ class HomeAssistantWebSocket:
 
     @asynccontextmanager
     async def connect(self) -> websockets.WebSocketClientProtocol:
+      try:
         ws_url = f'{self._host}/api/websocket'
 
         async with websockets.connect(ws_url, ping_timeout=5) as ws:
             self._ws = ws
             await self._authenticate()
             yield ws
+      except: print("HomeAssistantWebSocket connect error:"); traceback.print_exc()
 
     async def disconnect(self):
         await self._ws.close()
