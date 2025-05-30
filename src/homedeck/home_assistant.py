@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import traceback
 from contextlib import asynccontextmanager
 
 import websockets
@@ -10,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 class HomeAssistantWebSocket:
     def __init__(self, host: str, token: str):
+      try: 
         self._host = host.rstrip('/')
         self._token = token
         self._ws = None
@@ -22,6 +24,7 @@ class HomeAssistantWebSocket:
 
         self._callbacks = {}
         self._error_callbacks = {}
+      except: print("HomeAssistantWebSocket constructor error:"); traceback.print_exc()
 
     @asynccontextmanager
     async def connect(self) -> websockets.WebSocketClientProtocol:
